@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div style="max-width: 400px; margin: 4rem auto; padding: 2rem; background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h1 style="text-align: center;">Login</h1>
+
+    <p style="margin-top: 1rem; color: #666; text-align: center;">
+        Login is optional and only needed to view your own email notifications. All posts are managed through confirmation links in emails.
+    </p>
+
+    <form method="post" action="{% url 'account_login' %}">
+        {% csrf_token %}
+
+        <div style="margin-bottom: 1rem;">
+            <label for="id_email" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Email</label>
+            <input type="email" name="email" id="id_email" required style="width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px;">
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+            <label for="id_password" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Password</label>
+            <input type="password" name="password" id="id_password" required style="width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px;">
+        </div>
+
+        <button type="submit" style="width: 100%;">Log in</button>
+    </form>
+
+    <p style="margin-top: 1.5rem; font-size: 0.875rem; color: #666;">
+        Don't have an account? Email addresses are used automatically when submitting posts - no registration needed.
+    </p>
+</div>
+{% endblock %}

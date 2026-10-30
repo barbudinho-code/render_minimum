@@ -1,0 +1,98 @@
+# Render deployment manifest for the public post application.
+# See: https://render.com/docs/blueprint-spec
+#
+# Services defined:
+#   - web: Django WSGI service (user-facing)
+#   - worker: Celery/Django task worker
+#   - database: PostgreSQL managed database
+
+version: "1"
+
+services:
+  web:
+    type: web-service
+    name: public-posts-web
+    runtime: python
+    buildCommand: cd /opt/app/render_minimum && pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:8000 --workers 2 render_minimum.wsgi:application
+    envLink: https://github.com/YOUR_USER/public-posts/archive/master.zip
+    region: oregon
+    plan: free
+    instanceSize: small
+    env:
+      # Build-time dependencies go in requirements.txt.
+      # Runtime dependencies are installed from PyPI automatically.
+
+      # Server configuration.
+      DJANGO_DEBUG: "false"
+      PUBLIC_BASE_URL: https://{{AUTO_DETECTED_DOMAIN}}
+      DATABASE_URL: postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}?sslmode=require
+
+      # Email settings - configure in Render dashboard.
+      EMAIL_BACKEND: "django.core.mail.backends.smtp.EmailBackend"
+      DEFAULT_FROM_EMAIL: noreply@local
+      MODERATOR_EMAIL: moderator@example.com
+
+      # Production email settings (set in Render Dashboard).
+      EMAIL_HOST: smtp.gmail.com  # or your provider (SendGrid, Mailgun, etc.)
+      EMAIL_PORT: 587
+      EMAIL_USE_TLS: "true"
+
+      # Email security.
+      ALLOWED_HOSTS: |
+        - yourdomain.com
+        - *.yourdomain.com
+
+      # Rate limiting and cooldown.
+      EMAIL_COOLDOWN_SECONDS: 600
+      RATE_LIMIT_WINDOW: 60
+      RATE_LIMIT_REQUESTS: 3
+
+  worker:
+    type: background-worker
+    name: public-posts-worker
+    runtime: python
+    buildCommand: cd /opt/app/render_minimum && pip install -r requirements.txt
+    startCommand: cd /opt/app/render_minimum && gunicorn --bind 0.0.0.0:8001 --workers 1 render_minimum.management.commands.worker:main
+    region: oregon
+    plan: free
+    instanceSize: small
+    env:
+      # Same environment as web service.
+      DJANGO_DEBUG: "false"
+      DATABASE_URL: postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}?sslmode=require
+      DEFAULT_FROM_EMAIL: noreply@local
+      MODERATOR_EMAIL: moderator@example.com
+      EMAIL_HOST: smtp.gmail.com
+      EMAIL_PORT: 587
+      EMAIL_USE_TLS: "true"
+
+      # Worker-specific settings.
+      QUEUE_TIMEOUT: 300
+      MAX_CLAIMS: 10
+
+  database:
+    type: postgresql
+    name: public-posts-db
+    plan: starter
+    databases: []
+
+# Environment variables that should be set in Render Dashboard.
+env:
+  - DJANGO_DEBUG=false
+  - PUBLIC_BASE_URL=your-domain.com
+  - DEFAULT_FROM_EMAIL=noreply@local
+  - MODERATOR_EMAIL=moderator@example.com
+  - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DATABASE}
+  # Email provider settings (configure in Render Dashboard).
+  - EMAIL_HOST=smtp.gmail.com
+  - EMAIL_PORT=587
+  - EMAIL_USE_TLS=true
+
+# Health check endpoint for monitoring.
+healthCheck:
+  path: /health/
+  intervalSeconds: 30
+  timeoutSeconds: 10
+  healthyThreshold: 2
+  unhealthyThreshold: 3

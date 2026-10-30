@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}{% if token_valid %}Confirm Your Post{% else %}Confirmation Required{% endif %}{% endblock %}
+
+{% block content %}
+<div class="confirmation-content">
+    <h2>{% if token_valid and show_confirm %}Please Confirm Your Post{% else %}This link has expired{% endif %}</h2>
+
+    {% if not token_valid or not show_confirm %}
+    <p>Your post could not be confirmed. This may have happened because:</p>
+    <ul style="margin-left: 1.5rem;">
+        <li>The confirmation link has expired (more than one minute has passed).</li>
+        <li>This link was already used.</li>
+        <li>The post no longer exists.</li>
+    </ul>
+    {% elif remaining_seconds <= 0 %}
+    <p>Your confirmation period has expired. Your post will be automatically rejected and removed shortly.</p>
+    {% else %}
+    <p>You have submitted a post that is awaiting your confirmation:</p>
+
+    <div class="post-preview">
+        <strong>Username:</strong><br>{{ username }}<br><br>
+        <strong>Post text:</strong><br>{{ text }}
+    </div>
+
+    {% if remaining_seconds %}
+    <p style="text-align: center;">Time remaining: <span id="countdown" class="countdown">{{ remaining_seconds }}</span> seconds</p>
+
+    <!-- JavaScript countdown timer -->
+    <script>
+        (function() {
+            // Server-provided time to reduce clock errors.
+            let serverTime = {{ remaining_seconds }};
+            let timer = setInterval(function() {
+                serverTime--;
+                document.getElementById('countdown').textContent = Math.max(0, serverTime);
+
+                if (serverTime <= 0) {
+                    clearInterval(timer);
+                    // Do not confirm automatically. Disable the button instead.
+                    document.querySelector('button[type="submit"]').disabled = true;
+                    document.querySelector('button[type="submit"]').textContent = 'Expired';
+                }
+            }, 1000);
+        })();
+    </script>
+    {% endif %}
+
+    <form method="post" action="{% url 'confirm' post.pk token|urlencode %}" id="confirm-form">
+        {% csrf_token %}
+        <button type="submit" class="confirm-button" name="confirm_post">
+            Confirm my post
+        </button>
+    </form>
+
+    {% else %}
+    <!-- Hidden form for when countdown expires -->
+    <form method="post" action="{% url 'confirm' post.pk token|urlencode %}" id="confirm-form">
+        {% csrf_token %}
+        <button type="submit" class="confirm-button confirm-disabled" name="confirm_post" disabled>
+            Expired
+        </button>
+    </form>
+
+    <!-- Hidden form for acceptance on expiry -->
+    <form method="post" action="{% url 'accept_moderation' post.pk token|urlencode %}">
+        {% csrf_token %}
+        <input type="hidden" name="confirm_post" value="true">
+    </form>
+
+    <!-- Hidden form for rejection on expiry -->
+    <form method="post" action="{% url 'reject_moderation' post.pk token|urlencode %}">
+        {% csrf_token %}
+        <input type="hidden" name="confirm_post" value="true">
+    </form>
+    {% endif %}
+
+    <div style="background-color: #fff3cd; border: 1px solid #ffc107; padding: 1rem; margin-top: 1.5rem; border-radius: 4px;">
+        <strong>Warning:</strong> This link expires after one minute. If you do not confirm within this time, your post will be automatically rejected and removed from our system.
+    </div>
+
+    <p style="margin-top: 1rem;">
+        Did you receive this email by mistake? If so, please ignore this message. Your post will expire automatically and will not be published.
+    </p>
+    {% endif %}
+
+</div>
+{% endblock %}

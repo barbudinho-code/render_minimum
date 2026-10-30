@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Public Posts - Newest First{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 1rem;">Recent Public Posts</h1>
+
+{% if posts %}
+<div style="display: grid; gap: 1.5rem;">
+    {% for post in posts %}
+    <article style="background-color: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+            <h2 style="margin: 0; font-size: 1.25rem;">{{ post.username }}</h2>
+            {% if post.published_at %}
+            <span style="font-size: 0.875rem; color: #666;">Published {{ post.published_at|date:"F d, Y" }}</span>
+            {% else %}
+            <span style="font-size: 0.875rem; color: #666;">Posted {{ post.created_at|date:"F d, Y g:i a" }}</span>
+            {% endif %}
+        </div>
+        <p style="margin: 0; line-height: 1.6;">{{ post.text|truncatewords:30 }}</p>
+        <a href="{% url 'post_detail' post.pk %}" style="display: inline-block; margin-top: 1rem; font-size: 0.875rem; color: #0066cc;">Read full post →</a>
+    </article>
+    {% endfor %}
+</div>
+
+{% if paginator.num_pages > 1 %}
+<nav style="margin-top: 2rem; display: flex; justify-content: center; gap: 0.5rem;">
+    {% if page_number > 1 %}
+    <a href="?page={{ page_number|add:"-1" }}" style="padding: 0.5rem 1rem; background-color: white; border: 1px solid #ced4da; border-radius: 4px;">Previous</a>
+    {% endif %}
+
+    <span style="padding: 0.5rem 1rem; min-width: 80px; text-align: center; background-color: #e9ecef; border-radius: 4px;">Page {{ page_number }} of {{ paginator.num_pages }}</span>
+
+    {% if page_number < paginator.num_pages %}
+    <a href="?page={{ page_number|add:"1" }}" style="padding: 0.5rem 1rem; background-color: white; border: 1px solid #ced4da; border-radius: 4px;">Next</a>
+    {% endif %}
+</nav>
+{% endif %}
+
+{% else %}
+<p style="text-align: center; color: #666;">No public posts are available at the moment.</p>
+{% endif %}
+
+<div style="margin-top: 2rem; text-align: center;">
+    <a href="{% url 'submit' %}" style="padding: 0.75rem 1.5rem; background-color: #0066cc; color: white; border-radius: 4px; font-weight: 600;">Submit a post</a>
+</div>
+{% endblock %}
