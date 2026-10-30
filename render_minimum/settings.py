@@ -96,29 +96,16 @@ else:
         },
     })
 
-# Password validation - not needed since we don't use passwords.
-AUTH_PASSWORD_VALIDATORS = []
+# Password validation - Django defaults are fine.
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 6}},
+]
 
-# Authentication backends - using the default model backend.
+# Authentication backends - using default backend.
 AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.ModelBackend"]
 
-# Custom user model - simplified without email verification or unique usernames.
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-from django.db import models
-
-
-class SimpleUser(AbstractBaseUser, PermissionsMixin):
-    """Simplified user model for post authors."""
-    email = models.EmailField("email address", max_length=254)
-    is_staff = False
-    is_active = True
-
-    USERNAME_FIELD = "email"
-
-    class Meta:
-        verbose_name = "simple user"
-        verbose_name_plural = "simple users"
-
+# Custom user model - Using Django's default User model.
+# We don't require custom authentication - email is used for post authorship only.
 
 # Login/Logout URLs.
 LOGIN_URL = "account_login"

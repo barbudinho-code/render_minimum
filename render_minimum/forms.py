@@ -14,20 +14,20 @@ class SubmissionForm(forms.Form):
     """Form for submitting a new public post."""
 
     email = forms.EmailField(
-        "Email address",
+        label="Email address",
         max_length=254,
         help_text="We will send you a confirmation link via email.",
     )
 
     username = forms.CharField(
-        "Username",
+        label="Username",
         min_length=2,
         max_length=40,
         help_text="A display name for your post (2-40 characters).",
     )
 
     text = forms.CharField(
-        "Post text",
+        label="Post text",
         widget=forms.Textarea(attrs={
             "rows": 6,
             "placeholder": "Write your post here...",

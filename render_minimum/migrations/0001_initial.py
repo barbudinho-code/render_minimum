@@ -13,25 +13,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # SimpleUser model (optional, for email notifications).
-        migrations.CreateModel(
-            name="SimpleUser",
-            fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False)),
-                ("password", models.CharField(max_length=128, verbose_name="password")),
-                ("last_login", models.DateTimeField(blank=True, null=True, verbose_name="last login")),
-                ("is_superuser", models.BooleanField(default=False)),
-                ("email", models.EmailField(max_length=254, unique=True, verbose_name="email address")),
-                ("is_staff", models.BooleanField(default=False)),
-                ("is_active", models.BooleanField(default=True)),
-                ("date_joined", models.DateTimeField(verbose_name="date joined")),
-            ],
-            options={
-                "verbose_name": "simple user",
-                "verbose_name_plural": "simple users",
-            },
-        ),
-
         # Post model - main content object.
         migrations.CreateModel(
             name="Post",

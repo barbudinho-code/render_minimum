@@ -1,5 +1,6 @@
 # Application dependencies for the public posts application.
 # Install with: pip install -r requirements.txt
+# Compatible with Python 3.10+ and Django 4.2+
 
 Django>=4.2,<5.0
 gunicorn>=21.0
