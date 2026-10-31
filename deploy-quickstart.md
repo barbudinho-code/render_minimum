@@ -1,85 +1,78 @@
-# Quick Deployment on Render (15 Minutes)
+# Quickstart para Deploy na Render ⚡
 
-## Prerequisites
-- Render account: https://render.com/signin
-- PostgreSQL service created ($9/month minimum for production database)
+Guia rápido para publicar sua aplicação Hello World na Render em 5 minutos!
 
-## One-Command Deploy
+## 📋 Pré-requisitos
 
-### Option 1: Using render.yaml Blueprint (Recommended)
+- ✅ Conta no [Render.com](https://render.com) (gratuita)
+- ✅ Repositório Git com o projeto atualizado
+- ✅ Código testado localmente
 
-```bash
-cd /home/anderson/prj/render-minimum
-git add .
-git commit -m "Ready for production"
-git push origin main
-```
+## 🚀 Publicar - Passo a Passo Rápido
 
-Then in Render Dashboard:
-1. Create Web Service from your repo
-2. Create Background Task from same repo  
-3. Link PostgreSQL database
-4. Add environment variables (see table below)
-
-### Option 2: Manual Deployment via Dashboard
-
-**1. Create Services:**
-- Web: `public-posts-web` 
-- Worker: `public-posts-worker`
-
-**2. Build Commands (same for both):**
-```bash
-cd /opt/app/render_minimum && pip install -r requirements.txt
-```
-
-**3. Start Commands (different):**
-```bash
-# Web Service
-gunicorn --bind 0.0.0.0:8000 --workers 2 render_minimum.wsgi:application
-
-# Worker Service  
-python manage.py worker --queue-timeout 300 --max-claims 10
-```
-
-## Environment Variables (Add in Render Dashboard)
+### 1. Prepare seu repositório
 
 ```bash
-DJANGO_DEBUG=false
-PUBLIC_BASE_URL=https://your-app.onrender.com
-MODERATOR_EMAIL=moderator@example.com
-DEFAULT_FROM_EMAIL=noreply@local
-EMAIL_COOLDOWN_SECONDS=600
-AI_CLASSIFIER_RESULT_DOUBTFUL_FIRST=true
+# Verifique os arquivos importantes
+ls -la
+# Deve conter: app.py, requirements.txt, render.yaml
 ```
 
-**Database (auto-filled by Render):**
-```bash
-DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DATABASE}
+### 2. No Dashboard do Render
+
+1. Acesse [render.com/dashboard](https://dashboard.render.com)
+2. Clique em **"New +"** → **"Web Service"**
+3. Escolha seu repositório GitHub (ou crie novo)
+
+### 3. Configure a Web Service
+
+```
+Name: hello-world-app
+Region: US
+Environment: Python
+Root Directory: [deixe em branco]
+Build Command: pip install -r requirements.txt --quiet
+Start Command: gunicorn --bind 0.0.0.0:${PORT} app:app
 ```
 
-## Post-Deployment Testing
+4. Em **Environment Variables**, adicione:
+   ```
+   PYTHON_VERSION = 3.12.x
+   FLASK_ENV = production
+   ```
 
-1. Visit `https://your-app.onrender.com/` → Should show "No public posts"
-2. Submit a test post: `https://your-app.onrender.com/submit/`
-3. Check email delivery works
-4. Verify confirmation link activates within 60 seconds
-5. Check worker processing logs
+### 4. Clique em "Create Web Service"
 
-## Minimum Cost
+Agora aguarde 5-10 minutos enquanto o Render:
+- Clona seu repositório
+- Instala as dependências
+- Constrói a imagem Docker (opcional)
+- Lanza sua aplicação
 
-- Web Service (Free): $0
-- Worker (Free): $0  
-- PostgreSQL (Starter): ~$9/month
-- **Total: ~$9/month minimum**
+## ✅ Verificando se está funcionando
 
-## Troubleshooting
+Após ~5-10 minutos, você terá um URL como:
+```
+https://hello-world-app.onrender.com
+```
 
-**Email not working?** Configure SMTP in Render Dashboard, then restart services.
+Teste as rotas:
+- `https://seu-app.onrender.com/` → Hello World básico
+- `https://seu-app.onrender.com/greeting` → Página HTML bonita
+- `https://seu-app.onrender.com/status` → Status do app
 
-**Database connection errors?** Check `DATABASE_URL` has correct credentials from your PostgreSQL service.
+## 🎉 Pronto!
 
-**Static files missing?** Django includes them by default for small apps. For larger deployments, configure `STATIC_ROOT`.
+Sua aplicação está online e rodando na Render gratuitamente!
 
 ---
 
-Need more details? See `deploy.md` or `README.md`.
+### Próximos passos:
+
+1. **Customize**: Mude o nome da aplicação nas configurações
+2. **Variáveis de ambiente**: Adicione segredos sensíveis
+3. **Logs**: Monitore em Dashboard → Logs
+
+---
+
+**🤖 Generated with [Claude Code](https://claude.com/claude-code)**

@@ -1,196 +1,87 @@
-# Deployment Guide for Public Posts Application on Render
+# Guia de Deploy na Render
 
-## Overview
+## Passo a Passo Completo
 
-This application runs as a Django WSGI service with a PostgreSQL database and background worker for processing email tasks.
+### 1. Preparação do Repositório
 
-## Minimum Production Requirements
+Certifique-se que seu repositório Git contém:
+- `app.py` - Sua aplicação Flask
+- `requirements.txt` - Dependências Python
+- `render.yaml` - Configuração de deploy (opcional, o Render pode detectar automaticamente)
 
-- **Django**: 4.2 or later
-- **Python**: 3.10 or later
-- **PostgreSQL**: Managed by Render's Database service
-- **Gunicorn**: For serving WSGI application
-- **Render Free Plan**: Web service (free) + PostgreSQL Starter plan
+### 2. Criando Novo Projeto na Render
 
-## Pre-deployment Checklist
+1. Acesse [dashboard.render.com](https://dashboard.render.com)
+2. Clique em **"New +"** → **"Web Service"**
+3. Escolha sua opção:
 
-1. Complete all development work locally and test.
-2. Run database migrations with `python manage.py migrate`.
-3. Verify email configuration works in production SMTP settings.
-4. Set environment variables before deploying.
+#### Opção A: Usar repositório existente (GitHub, GitLab, Bitbucket)
+- **Name**: `hello-world-app` (pode mudar depois)
+- **Region**: US (ou Brasil se disponível)
+- **Environment**: Python
+- **Root Directory**: deixem em branco
+- **Build Command**: `pip install -r requirements.txt --quiet`
+- **Start Command**: `gunicorn --bind 0.0.0.0:${PORT} app:app`
 
-## Render Deployment Steps
+#### Opção B: Link direto ao repositório Git
+- Cole o link do seu GitHub/GitLab
 
-### 1. Push Code to Repository
+4. Configure as variáveis de ambiente:
+   - **PYTHON_VERSION**: `3.12.x` (ou sua versão)
 
-```bash
-cd /home/anderson/prj/render-minimum
-git add .
-git commit -m "Add public posts application"
-git push origin main
-```
+5. Clique em **"Create Web Service"**
 
-### 2. Create PostgreSQL Database in Render Dashboard
+### 3. Alternativa: Deploy via Push ao Git
 
-1. Go to https://dashboard.render.com/new/resource
-2. Select **PostgreSQL** template
-3. Choose a name (e.g., `public-posts-db`)
-4. Plan: Starter ($9/month minimum) or Hobby (free tier with limitations)
-5. Click "Create" - wait for provisioning
-
-### 3. Create Web Service in Render Dashboard
-
-1. Go to **New** → **Web Service**
-2. Select your Git repository or upload your code
-3. Configure:
-   - **Name**: `public-posts-web`
-   - **Provider**: Git (select your repo) or File Upload
-   - **Build command**: `cd /opt/app/render_minimum && pip install -r requirements.txt`
-   - **Start command**: `gunicorn --bind 0.0.0.0:8000 --workers 2 render_minimum.wsgi:application`
-   - **Runtime**: Python
-4. In environment variables, set:
-   ```
-   DJANGO_DEBUG=false
-   PUBLIC_BASE_URL=https://your-subdomain.onrender.com
-   DATABASE_URL=postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}?sslmode=require
-   MODERATOR_EMAIL=yourmoderator@example.com
-   DEFAULT_FROM_EMAIL=noreply@local
-   EMAIL_COOLDOWN_SECONDS=600
-   AI_CLASSIFIER_RESULT_DOUBTFUL_FIRST=true
-   ```
-
-### 4. Create Background Worker Service
-
-1. **New** → **Background Task**
-2. Configure:
-   - **Name**: `public-posts-worker`
-   - Same build command as web service
-   - **Start command**: `python manage.py worker --queue-timeout 300 --max-claims 10`
-   - Runtime: Python
-   - Instance size: Small (same as web)
-
-### 5. Link PostgreSQL Database
-
-In each service's environment variables, add:
+Se você já conectou o repositório com o Render:
 
 ```bash
-DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DATABASE}
+git push render production
 ```
 
-Render will populate these values when you select the database service as a resource.
+O Render detectará automaticamente e iniciará o deploy.
 
-### 6. Configure Email Provider
+### 4. Verificando o Deploy
 
-For SMTP email delivery:
+Depois de alguns minutos, sua aplicação estará no link:
+- `https://hello-world-app.onrender.com` (ou nome que você escolheu)
 
-1. Set `EMAIL_HOST` (e.g., `smtp.gmail.com`, `sendgrid.net`)
-2. Set `EMAIL_PORT` (e.g., `587` for TLS)
-3. Set `EMAIL_USE_TLS=true`
-4. Add your credentials if needed
+Teste acessando:
+- `/` → Hello World básico
+- `/greeting` → Página com HTML estilizado
+- `/status` → Informações da aplicação
 
-For Gmail:
-- Use App Passwords, not your main password
-- Enable "Less secure apps" or use OAuth2
+## Atualização Contínua
 
-Alternative providers:
-- **SendGrid**: Requires API key as password
-- **Mailgun**: SMTP settings from dashboard
-- **SES**: AWS Simple Email Service endpoint
-
-### 7. Run Migrations After Deployment
-
-Render automatically runs `migrate` on startup. To verify:
-
-1. In the web service logs, check for migration output
-2. Or trigger manually via the worker service logs
-
-## Environment Variables Reference
-
-| Variable | Purpose | Example Value |
-|----------|---------|---------------|
-| `DJANGO_DEBUG` | Debug mode (true for dev, false for prod) | `false` |
-| `PUBLIC_BASE_URL` | Base URL for forms and emails | `https://app.onrender.com` |
-| `DATABASE_URL` | PostgreSQL connection string | Auto-filled by Render |
-| `MODERATOR_EMAIL` | Moderation notifications email | `moderator@example.com` |
-| `DEFAULT_FROM_EMAIL` | From address in emails | `noreply@local` |
-| `EMAIL_HOST` | SMTP server hostname | `smtp.gmail.com` |
-| `EMAIL_PORT` | SMTP port | `587` |
-| `EMAIL_USE_TLS` | Use TLS encryption | `true` |
-| `EMAIL_COOLDOWN_SECONDS` | Email cooldown window | `600` |
-| `AI_CLASSIFIER_RESULT_DOUBTFUL_FIRST` | AI result for initial impl | `true` |
-
-## Production Security Checklist
-
-- [ ] `DJANGO_DEBUG=false` in production
-- [ ] `ALLOWED_HOSTS` configured (don't use wildcard `*`)
-- [ ] HTTPS enabled (automatic on Render)
-- [ ] No secrets in code - all in environment variables
-- [ ] CORS headers configured if needed
-- [ ] Static files served correctly
-
-## Known Limitations in Production
-
-1. **Email Delivery Delays**: If SMTP is slow or fails, confirmation links may expire before delivery. Consider increasing `CONFIRMATION_DEADLINE_SECONDS`.
-
-2. **No Free PostgreSQL on Render**: The database requires a paid plan (Starter $9/month minimum). Hobby tier with free database has limitations.
-
-3. **Worker Process Limits**: Background workers have limited CPU/time in free plans. Consider scaling to Small instances if processing is heavy.
-
-4. **Static Files**: Django serves static files automatically for small apps. For larger file counts, consider Cloudflare or a CDN.
-
-## Monitoring and Maintenance
-
-### Check Application Health
-
-- Visit `https://your-domain.com/health/`
-- Check logs in Render Dashboard → Services → Logs
-
-### Monitor Task Queue
-
-Run the inspect command periodically:
-```bash
-python manage.py inspect-failed
-```
-
-### Cleanup Expired Data
-
-Run cleanup weekly:
-```bash
-python manage.py cleanup
-```
-
-Or let the worker handle it automatically.
+O Render usa **Git deployments**:
+1. Faça alterações no código
+2. Commit e push ao branch principal (`main`)
+3. O Render detecta automaticamente e reinicia o deploy
+4. Após 2-5 minutos, sua atualização está no ar!
 
 ## Troubleshooting
 
-### Posts not appearing
+### Aplicação não inicia?
+Verifique:
+- O comando `run` está correto no arquivo
+- A porta `$PORT` é definida pelo Render (geralmente 10000)
 
-1. Check `state` field in database - must be `PUBLIC` (3).
-2. Verify email confirmation was completed within 60 seconds.
-3. Check worker logs for processing errors.
-
-### Emails not sending
-
-1. Check `EMAIL_HOST` and credentials.
-2. Verify SMTP connection from Render environment.
-3. Check Render service logs for connection errors.
-
-### Database migration errors
-
-```bash
-python manage.py migrate --noinput
+### Erro de dependência?
+Adicione ao `requirements.txt`:
+```
+flask>=2.3.0
+gunicorn>=21.0.0
 ```
 
-### Static files missing in production
+## Próximos Passos
 
-- Django includes static files by default for small apps.
-- For large deployments, configure `STATIC_ROOT` and `WhiteNoiseStorage`.
+- Adicione um banco de dados
+- Configure variáveis de ambiente seguras
+- Implemente autenticação
+- Use logs do Render para debug
 
-## Next Steps
+---
 
-After deployment:
+Para mais informações: [Render Docs](https://render.com/docs)
 
-1. Test the full workflow: submit → receive email → confirm → wait for moderation → approve.
-2. Monitor moderation queue - respond to requests promptly.
-3. Configure custom email provider if needed.
-4. Set up monitoring alerts for failed tasks.
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
