@@ -6,9 +6,13 @@ services:
     build_cmd: |
       pip install flask gunicorn > /dev/null 2>&1
 
-    # Comando de run usando Gunicorn no porta $PORT
-    run: gunicorn --bind 0.0.0.0:${PORT} app:app
+    # Comando de run usando Gunicorn com FLASK_APP apontando para wsgi.py
+    run: |
+      cd /opt/render/project/src && \
+      FLASK_APP=wsgi.py flask run --host=0.0.0.0 --port=${PORT} || \
+      gunicorn --bind 0.0.0.0:${PORT} --worker-class gthread  wsgi:application
 
     # Configurações básicas para produção no Render
     disk: 512
     memory: 512
+
