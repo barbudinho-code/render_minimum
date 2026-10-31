@@ -105,11 +105,5 @@ def websocket():
 </body>
 </html>'''
 
-def wsgi_app(environ, start_response):
-    """WSGI handler para Flask (útil para produção no Render)."""
-    return app.wsgi_app(environ, start_response)
-
-app.wsgi_app = wsgi_app
-
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(port=5000)
