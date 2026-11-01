@@ -131,6 +131,13 @@ def health():
     return jsonify({'status': 'healthy', 'message': 'Servidor funcionando!'})
 
 
+import os
+from flask import Flask, jsonify, send_from_directory
+
+app = Flask(__name__)
+
+
 if __name__ == '__main__':
-    app.run()
-#    app.run(debug=True)
+    # Lê a porta do ambiente (Render usa PORT=5000 por padrão)
+    port = int(os.environ.get('PORT', 8000))
+    app.run(host='0.0.0.0', port=port, debug=False)
