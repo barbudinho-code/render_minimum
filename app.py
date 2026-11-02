@@ -1,6 +1,11 @@
+import os
 from flask import Flask, jsonify, send_from_directory
 
 app = Flask(__name__)
+
+
+# Define porta para 8000 (ou use PORT do ambiente na Render)
+PORT = int(os.environ.get('PORT', 8000))
 
 
 @app.route('/')
@@ -11,7 +16,7 @@ def index():
 
 @app.route('/favicon.ico')
 def favicon():
-    """Servi o ícone da aplicaçao"""
+    """Servi o ícone da aplicação"""
     return send_from_directory('static', 'icon.ico')
 
 
@@ -131,13 +136,6 @@ def health():
     return jsonify({'status': 'healthy', 'message': 'Servidor funcionando!'})
 
 
-import os
-from flask import Flask, jsonify, send_from_directory
-
-app = Flask(__name__)
-
-
 if __name__ == '__main__':
-    # Lê a porta do ambiente (Render usa PORT=5000 por padrão)
-    port = int(os.environ.get('PORT', 8000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    # Desenvolvimento local - usa porta 8000 ou PORT do ambiente
+    app.run(host='0.0.0.0', port=PORT, debug=False)
