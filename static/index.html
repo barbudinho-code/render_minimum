@@ -255,7 +255,7 @@
             <p style="margin-top: 10px;" data-i18n="emptyState.subtitle"></p>
         </div>
 
-        <div class="version-badge">Versão: 1.0.3</div>
+        <div class="version-badge">Versão: 1.0.4</div>
     </div>
 
     <script>
@@ -305,6 +305,17 @@
             if (document.querySelector('[data-i18n="hierarchyTitle"]')) {
                 document.querySelector('[data-i18n="hierarchyTitle"]').textContent = t.hierarchyTitle;
             }
+
+            // Garante que o nível de partidos esteja VISÍVEL após mudar idioma
+            const levelPartido = document.getElementById('level-1');
+            if (levelPartido) {
+                console.log('Nível de partidos (level-1) classes:', Array.from(levelPartido.classList));
+                // Remove level-hidden e adiciona level-active
+                levelPartido.classList.remove('level-hidden');
+                levelPartido.classList.add('level-active');
+                console.log('Nível de partidos agora visível, aguardando loadParties() para preencher');
+            }
+
         }
 
         // Carrega países ao iniciar
@@ -322,7 +333,33 @@
             }
         }
 
-        // Carrega partidos para um país
+        // Função para ocultar todos os dropdowns inferiormente na hierarquia
+        function ocultarDropdownsInferiores() {
+            // Oculta e limpa dropdown de partido
+            const levelPartido = document.getElementById('level-1');
+            if (levelPartido) {
+                levelPartido.classList.add('level-hidden');
+                selectores.partido.innerHTML = '<option value="">Selecione um partido...</option>';
+            }
+
+            // Oculta e limpa dropdown de cargo
+            const levelCargo = document.getElementById('level-2');
+            if (levelCargo) {
+                levelCargo.classList.add('level-hidden');
+                selectores.cargo.innerHTML = '<option value="">Selecione uma posição...</option>';
+            }
+
+            // Oculta e limpa dropdown de candidato
+            const levelCandidato = document.getElementById('level-3');
+            if (levelCandidato) {
+                levelCandidato.classList.add('level-hidden');
+                selectores.candidato.innerHTML = '<option value="">Selecione um candidato...</option>';
+            }
+
+            console.log('Dropdowns inferiores ocultos e limpos');
+        }
+
+        // Carrega cargos para um partido
         async function loadParties() {
             const paisId = selectores.pais.value;
             if (!paisId) return;
@@ -330,6 +367,9 @@
             try {
                 const res = await fetch(`/api/carrega_partidos/${paisId}`);
                 const partidos = await res.json();
+
+                // Limpa e oculta dropdowns inferiores
+                ocultarDropdownsInferiores();
 
                 selectores.partido.innerHTML = '<option value="">Selecione um partido...</option>' +
                     partidos.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
@@ -346,11 +386,14 @@
             const paisId = selectores.pais.value;
             const partidoId = selectores.partido.value;
 
-            if (!paisId || !partidoId) return;
+            if (!paisId || !partidoId) return ocultarDropdownsInferiores();
 
             try {
                 const res = await fetch(`/api/carrega_cargos/${paisId}/${partidoId}`);
                 const cargos = await res.json();
+
+                selectores.partido.innerHTML = '<option value="">Selecione um partido...</option>';
+                ocultarDropdownsInferiores();
 
                 selectores.cargo.innerHTML = '<option value="">Selecione uma posição...</option>' +
                     cargos.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
@@ -453,9 +496,7 @@
                 loadParties();
             } else {
                 console.log('Nenhum país selecionado, resetando');
-                document.getElementById('level-1').classList.add('level-hidden');
-                document.getElementById('level-2').classList.add('level-hidden');
-                document.getElementById('level-3').classList.add('level-hidden');
+                ocultarDropdownsInferiores();
             }
 
             atualizarBreadcrumb();
@@ -464,12 +505,14 @@
         selectores.partido.addEventListener('change', function() {
             loadCargos();
             atualizarBreadcrumb();
-            if (!selectores.partido.value) {
-                document.getElementById('level-2').classList.add('level-hidden');
+
+            // Se não tem valor, oculta tudo
+            if (!this.value) {
+                ocultarDropdownsInferiores();
             } else {
+                // Tenta mostrar o nível de cargo se existir
                 const levelCargo = document.getElementById('level-2');
-                if (!levelCargo.classList.contains('level-active')) {
-                    levelCargo.classList.remove('level-hidden');
+                if (levelCargo && !levelCargo.classList.contains('level-hidden')) {
                     levelCargo.classList.add('level-active');
                 }
             }
@@ -478,18 +521,29 @@
         selectores.cargo.addEventListener('change', function() {
             loadCandidatos();
             atualizarBreadcrumb();
-            if (!selectores.cargo.value) {
-                document.getElementById('level-3').classList.add('level-hidden');
+
+            // Se não tem valor, oculta tudo
+            if (!this.value) {
+                ocultarDropdownsInferiores();
             } else {
+                // Tenta mostrar o nível de candidato se existir
                 const levelCandidato = document.getElementById('level-3');
-                if (!levelCandidato.classList.contains('level-active')) {
-                    levelCandidato.classList.remove('level-hidden');
+                if (levelCandidato && !levelCandidato.classList.contains('level-hidden')) {
                     levelCandidato.classList.add('level-active');
                 }
             }
         });
 
-        selectores.candidato.addEventListener('change', loadInfo);
+        selectores.candidato.addEventListener('change', function() {
+            loadInfo();
+            console.log('Candidato selecionado, carregando informações...');
+
+            // Tenta mostrar o nível de candidato se existir
+            const levelCandidato = document.getElementById('level-3');
+            if (levelCandidato && !levelCandidato.classList.contains('level-hidden')) {
+                levelCandidato.classList.add('level-active');
+            }
+        });
 
         // Atualiza breadcrumb ao carregar países
         function atualizarBreadcrumb() {
