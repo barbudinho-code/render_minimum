@@ -7,3 +7,7 @@
 [33mPress CTRL+C to quit[0m
 127.0.0.1 - - [02/Nov/2026 15:45:15] "HEAD / HTTP/1.1" 200 -
 127.0.0.1 - - [02/Nov/2026 15:45:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2026 18:27:12] "GET /api/carrega_partidos/3 HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2026 18:27:12] "GET /api/carrega_partidos/3 HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2026 18:27:15] "GET /api/carrega_partidos/5 HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2026 18:27:15] "GET /api/carrega_partidos/5 HTTP/1.1" 200 -
