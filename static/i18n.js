@@ -2,7 +2,6 @@
  * Sistema de Internacionalização (i18n) - Controle dinâmico do idioma
  */
 
-// Dicionário de tradução para cada idioma
 const translations = {
     pt_BR: {
         title: 'Sistema de Candidatos',
@@ -98,31 +97,14 @@ const translations = {
     }
 };
 
-// Mapeamento País (id) -> Locale
-const LOCALE_MAP = {
-    1: 'pt_BR',      // Brasil
-    2: 'en_US',      // Portugal
-    3: 'es_ES',      // Espanha
-    4: 'es_MX',      // Argentina
-    5: 'es_MX'       // México
-};
-
-// Mapeamento País (id) -> Timezone
-const TIMEZONE_MAP = {
-    1: 'America/Sao_Paulo',
-    2: 'Europe/Lisbon',
-    3: 'Europe/Madrid',
-    4: 'America/Argentina/Buenos_Aires',
-    5: 'America/Mexico_City'
-};
+const LOCALE_MAP = { 1: 'pt_BR', 2: 'en_US', 3: 'es_ES', 4: 'es_MX', 5: 'es_MX' };
 
 /**
- * Aplica as traduções para um idioma específico
+ * Aplica traduções ao idioma selecionado
  */
 function applyTranslations(locale) {
     const text = translations[locale] || translations.pt_BR;
 
-    // Atualiza todos os elementos com atributo data-i18n
     const elements = document.querySelectorAll('[data-i18n]');
     elements.forEach(el => {
         const key = el.getAttribute('data-i18n');
@@ -131,21 +113,12 @@ function applyTranslations(locale) {
         }
     });
 
-    // Muda o lang do documento HTML
     document.documentElement.lang = locale.split('-')[0];
-
-    // Remove classes de idioma anteriores
     document.documentElement.classList.remove('lang-en-US', 'lang-es-ES', 'lang-es-MX');
 
-    // Adiciona classe do idioma atual
-    if (locale === 'en_US') {
-        document.documentElement.classList.add('lang-en-US');
-    } else if (locale === 'es_ES' || locale === 'es_MX') {
-        document.documentElement.classList.add('lang-es-ES');
-    }
-
-    // Retorna o locale formatado com hífen para cabeçalhos HTTP
-    return locale.replace('_', '-');
+    const prefix = locale.replace('_', '-');
+    if (prefix === 'en-us') document.documentElement.classList.add('lang-en-US');
+    else if (prefix === 'es-es' || prefix === 'es-mx') document.documentElement.classList.add('lang-es-ES');
 }
 
 /**
@@ -154,92 +127,63 @@ function applyTranslations(locale) {
 function updateStaticLabels() {
     const currentLocale = document.documentElement.lang.replace('-', '_') || 'pt_BR';
 
-    const labels = ['countryLabel', 'partyLabel', 'positionLabel', 'candidateLabel',
-                    'selectCountry', 'selectParty', 'selectPosition', 'selectCandidate',
-                    'hierarchyTitle', 'infoTitle', 'nameField', 'ageField',
-                    'nationalityField', 'bioField', 'dateField'];
-
-    labels.forEach(key => {
+    ['countryLabel', 'partyLabel', 'positionLabel', 'candidateLabel',
+     'selectCountry', 'selectParty', 'selectPosition', 'selectCandidate'].forEach(key => {
         const el = document.querySelector(`[data-i18n="${key}"]`);
         if (el && translations[currentLocale][key]) {
             el.textContent = translations[currentLocale][key];
         }
     });
 
-    // Atualiza títulos e subtítulos do header
     const pageTitle = document.getElementById('page-title');
     const pageSubtitle = document.getElementById('page-subtitle');
+    const infoTitle = document.querySelector('.info-section h2');
+
     if (pageTitle) pageTitle.textContent = translations[currentLocale].title;
     if (pageSubtitle) pageSubtitle.textContent = translations[currentLocale].subtitle;
-
-    // Atualiza títulos de cards de informações
-    const infoTitle = document.querySelector('.info-section h2');
     if (infoTitle) infoTitle.textContent = translations[currentLocale].infoTitle;
 
-    const nameField = document.querySelectorAll('.info-card h4').slice(0, 1);
-    if (nameField.length > 0) nameField[0].textContent = translations[currentLocale].nameField;
+    const cards = document.querySelectorAll('.info-card h4');
+    if (cards[0]) cards[0].textContent = translations[currentLocale].nameField;
+    if (cards[1]) cards[1].textContent = translations[currentLocale].ageField;
+    if (cards[2]) cards[2].textContent = translations[currentLocale].nationalityField;
+    if (cards[3]) cards[3].textContent = translations[currentLocale].bioField;
 
-    const ageField = document.querySelectorAll('.info-card h4').slice(1, 2);
-    if (ageField.length > 0) ageField[0].textContent = translations[currentLocale].ageField;
+    const breadcrumb = document.getElementById('breadcrumb');
+    if (breadcrumb) {
+        const items = [];
+        const paisSelect = document.getElementById('pais-select');
+        const partidoSelect = document.getElementById('partido-select');
 
-    const nationalityField = document.querySelectorAll('.info-card h4').slice(2, 3);
-    if (nationalityField.length > 0) nationalityField[0].textContent = translations[currentLocale].nationalityField;
+        if (paisSelect && paisSelect.value) {
+            const paisText = paisSelect.options[paisSelect.selectedIndex]?.textContent;
+            items.push({ text: paisText, emoji: '🌍' });
+        }
 
-    const bioTitle = document.querySelectorAll('.info-card h4').slice(3, 4);
-    if (bioTitle.length > 0) bioTitle[0].textContent = translations[currentLocale].bioField;
+        if (partidoSelect && partidoSelect.value) {
+            const partidoText = partidoSelect.options[partidoSelect.selectedIndex]?.textContent;
+            items.push({ text: partidoText, emoji: '🎭' });
+        }
 
-    // Atualiza breadcrumb com emojis do idioma atual
-    updateBreadcrumbEmojis();
-}
-
-/**
- * Atualiza emojis no breadcrumb baseado no locale
- */
-function updateBreadcrumbEmojis() {
-    const breadcrumbs = document.querySelectorAll('.breadcrumb-item');
-
-    // Pega valores atuais dos selects
-    const paisSelect = document.getElementById('pais-select');
-    const partidoSelect = document.getElementById('partido-select');
-    const cargoSelect = document.getElementById('cargo-select');
-    const candidatoSelect = document.getElementById('candidato-select');
-
-    const items = [];
-
-    if (paisSelect && paisSelect.value) {
-        items.push({ text: paisSelect.options[paisSelect.selectedIndex]?.textContent, emoji: '🌍' });
-    }
-    if (partidoSelect && partidoSelect.value) {
-        items.push({ text: partidoSelect.options[partidoSelect.selectedIndex]?.textContent, emoji: '🎭' });
-    }
-    if (cargoSelect && cargoSelect.value) {
-        items.push({ text: cargoSelect.options[cargoSelect.selectedIndex]?.textContent, emoji: '💼' });
-    }
-    if (candidatoSelect && candidatoSelect.value) {
-        const nome = candidatoSelect.options[candidatoSelect.selectedIndex]?.textContent;
-        items.push({ text: nome, emoji: '👤', short: true });
-    }
-
-    // Atualiza o HTML do breadcrumb
-    const breadcrumbContainer = document.getElementById('breadcrumb');
-    if (breadcrumbContainer) {
-        breadcrumbContainer.innerHTML = items.map(item =>
+        breadcrumb.innerHTML = items.map(item =>
             `<span class="breadcrumb-item">${item.emoji} ${item.text}</span>`
         ).join('');
     }
 }
 
 /**
- * Carrega países e configura o primeiro dropdown
+ * Carrega países - FUNÇÃO PRINCIPAL QUE DEVE RODAR NO INICIALIZAÇÃO
  */
 async function loadCountries() {
     try {
         const response = await fetch('/api/carrega_paises');
+        if (!response.ok) throw new Error('Erro ao buscar países: ' + response.statusText);
+
         const paises = await response.json();
+        console.log('Países carregados:', paises);
 
         const select = document.getElementById('pais-select');
-        if (select) {
-            // Adiciona opção inicial
+        if (select && paises.length > 0) {
             let optionsHTML = '<option value="">Selecione um país...</option>';
 
             paises.forEach(pais => {
@@ -252,9 +196,16 @@ async function loadCountries() {
             });
 
             select.innerHTML = optionsHTML;
+            console.log('Dropdown de países populado com:', paises.map(p => p.nome).join(', '));
+        } else if (select) {
+            select.innerHTML = '<option value="">Nenhum país carregado</option>';
         }
     } catch (error) {
         console.error('Erro ao carregar países:', error);
+        const select = document.getElementById('pais-select');
+        if (select) {
+            select.innerHTML = '<option value="">Erro ao carregar países</option>';
+        }
     }
 }
 
@@ -267,12 +218,9 @@ async function loadParties() {
     if (!paisId) return;
 
     try {
-        // Envia cabeçalho Accept-Language para saber qual idioma usar na resposta se necessário
-        const response = await fetch(`/api/carrega_partidos/${paisId}`, {
-            headers: {
-                'Accept-Language': document.documentElement.lang.replace('-', '_')
-            }
-        });
+        const response = await fetch(`/api/carrega_partidos/${paisId}`);
+        if (!response.ok) throw new Error('Erro ao buscar partidos');
+
         const partidos = await response.json();
 
         const select = document.getElementById('partido-select');
@@ -284,11 +232,7 @@ async function loadParties() {
             });
         }
 
-        // Armazena no cache global
-        if (!window) window = {};
-        window.partidosCache = window.partidosCache || new Map();
-        window.partidosCache.set(paisId, partidos);
-
+        console.log('Partidos carregados para país', paisId);
     } catch (error) {
         console.error('Erro ao carregar partidos:', error);
     }
@@ -304,11 +248,9 @@ async function loadCargos() {
     if (!paisId || !partidoId) return;
 
     try {
-        const response = await fetch(`/api/carrega_cargos/${paisId}/${partidoId}`, {
-            headers: {
-                'Accept-Language': document.documentElement.lang.replace('-', '_')
-            }
-        });
+        const response = await fetch(`/api/carrega_cargos/${paisId}/${partidoId}`);
+        if (!response.ok) throw new Error('Erro ao buscar cargos');
+
         const cargos = await response.json();
 
         const select = document.getElementById('cargo-select');
@@ -319,12 +261,6 @@ async function loadCargos() {
                 select.innerHTML += `<option value="${cargo.id}">${cargo.nome}</option>`;
             });
         }
-
-        // Cache de cargos
-        if (!window.cargosCache) window.cargosCache = new Map();
-        const cacheKey = `${paisId}-${partidoId}`;
-        window.cargosCache.set(cacheKey, cargos);
-
     } catch (error) {
         console.error('Erro ao carregar cargos:', error);
     }
@@ -341,11 +277,9 @@ async function loadCandidatos() {
     if (!paisId || !partidoId || !cargoId) return;
 
     try {
-        const response = await fetch(`/api/carrega_candidatos/${paisId}/${partidoId}/${cargoId}`, {
-            headers: {
-                'Accept-Language': document.documentElement.lang.replace('-', '_')
-            }
-        });
+        const response = await fetch(`/api/carrega_candidatos/${paisId}/${partidoId}/${cargoId}`);
+        if (!response.ok) throw new Error('Erro ao buscar candidatos');
+
         const candidatos = await response.json();
 
         const select = document.getElementById('candidato-select');
@@ -356,12 +290,6 @@ async function loadCandidatos() {
                 select.innerHTML += `<option value="${candidato.id}">${candidato.nome}</option>`;
             });
         }
-
-        // Cache de candidatos
-        if (!window.candidatosCache) window.candidatosCache = new Map();
-        const cacheKey = `${paisId}-${partidoId}-${cargoId}`;
-        window.candidatosCache.set(cacheKey, candidatos);
-
     } catch (error) {
         console.error('Erro ao carregar candidatos:', error);
     }
@@ -379,13 +307,11 @@ async function loadInfo() {
     if (!paisId || !partidoId || !cargoId || !candidatoId) return;
 
     try {
-        const timezone = TIMEZONE_MAP[paisId] || 'America/Sao_Paulo';
+        const timezone = 'America/Sao_Paulo';
 
-        const response = await fetch(`/api/carrega_info/${paisId}/${partidoId}/${cargoId}/${candidatoId}?timezone=${encodeURIComponent(timezone)}`, {
-            headers: {
-                'Accept-Language': document.documentElement.lang.replace('-', '_')
-            }
-        });
+        const response = await fetch(`/api/carrega_info/${paisId}/${partidoId}/${cargoId}/${candidatoId}?timezone=${encodeURIComponent(timezone)}`);
+        if (!response.ok) throw new Error('Erro ao buscar informações do candidato');
+
         const info = await response.json();
 
         // Preenche campos de informação
@@ -400,8 +326,8 @@ async function loadInfo() {
             if (el) el.textContent = info[el.id] || '';
         });
 
-        // Atualiza breadcrumb com dados do candidato
-        updateBreadcrumbEmojis();
+        // Atualiza breadcrumb
+        updateStaticLabels();
 
         // Mostra seção de informações, esconde estado vazio
         const infoSection = document.querySelector('.info-section');
@@ -421,27 +347,34 @@ async function loadInfo() {
 const paisSelect = document.getElementById('pais-select');
 if (paisSelect) {
     paisSelect.addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
+        console.log('Evento change no dropdown de países disparado');
 
-        if (selectedOption.value) {
-            // Pega o locale do atributo data-locale da opção selecionada
-            const newLocale = selectedOption.getAttribute('data-locale') || 'pt_BR';
-
-            // 1. MUDA O IDIOMA
-            const formattedLocale = newLocale.replace('_', '-');
-            const displayLocale = applyTranslations(newLocale);
-
-            // 2. ATUALIZA LABELS E UI
-            updateStaticLabels();
-
-            console.log(`Idioma alterado para: ${formattedLocale}`);
-
-            // 3. CARREGA PARTIDOS COM O NOVO IDIOMA NO CABEÇALHO
-            loadParties();
-        } else {
-            // Reseta os níveis inferiores
+        if (!this.value) {
+            console.log('Nenhum país selecionado, resetando níveis inferiores');
             hideLevel(1);
+            return;
         }
+
+        // Pega o locale do atributo data-locale da opção selecionada
+        const selectedOption = this.options[this.selectedIndex];
+        if (!selectedOption || !selectedOption.value) {
+            console.log('Opção inválida selecionada');
+            hideLevel(1);
+            return;
+        }
+
+        const newLocale = selectedOption.getAttribute('data-locale') || 'pt_BR';
+        const formattedLocale = newLocale.replace('_', '-');
+
+        // 1. MUDA O IDIOMA
+        console.log('Mudando idioma para:', formattedLocale);
+        applyTranslations(newLocale);
+
+        // 2. ATUALIZA LABELS E UI
+        updateStaticLabels();
+
+        // 3. CARREGA PARTIDOS
+        loadParties();
     });
 }
 
@@ -451,6 +384,8 @@ if (paisSelect) {
 const partidoSelect = document.getElementById('partido-select');
 if (partidoSelect) {
     partidoSelect.addEventListener('change', function() {
+        console.log('Evento change no dropdown de partidos disparado, valor:', this.value);
+
         if (this.value) {
             loadCargos();
         } else {
@@ -465,6 +400,8 @@ if (partidoSelect) {
 const cargoSelect = document.getElementById('cargo-select');
 if (cargoSelect) {
     cargoSelect.addEventListener('change', function() {
+        console.log('Evento change no dropdown de cargos disparado, valor:', this.value);
+
         if (this.value) {
             loadCandidatos();
         } else {
@@ -478,7 +415,10 @@ if (cargoSelect) {
  */
 const candidatoSelect = document.getElementById('candidato-select');
 if (candidatoSelect) {
-    candidatoSelect.addEventListener('change', loadInfo);
+    candidatoSelect.addEventListener('change', function() {
+        console.log('Evento change no dropdown de candidatos disparado, carregando informações...');
+        loadInfo();
+    });
 }
 
 /**
@@ -493,81 +433,16 @@ function hideLevel(levelNumber) {
 }
 
 /**
- * Inicialização ao carregar a página
+ * Inicialização ao carregar a página - RODA Imediatamente
  */
 document.addEventListener('DOMContentLoaded', function() {
-    // Carrega países no init
+    console.log('DOM carregado, inicializando aplicação...');
+
+    // Carrega países imediatamente ao carregar a página
     loadCountries();
-
-    // Garante que o primeiro nível está visível
-    const level0 = document.getElementById('level-0');
-    if (level0 && level0.classList) {
-        level0.classList.add('level-active');
-        level0.classList.remove('level-hidden');
-    }
-
-    // Event listeners - anexados APÓS DOMContentLoaded quando elementos existem
-    const paisSelect = document.getElementById('pais-select');
-    if (paisSelect) {
-        paisSelect.addEventListener('change', function() {
-            console.log('País selecionado:', this.value);  // Debug
-            const selectedOption = this.options[this.selectedIndex];
-
-            if (selectedOption && selectedOption.value) {
-                // Pega o locale do atributo data-locale da opção selecionada
-                const newLocale = selectedOption.getAttribute('data-locale') || 'pt_BR';
-
-                console.log('Idioma:', newLocale);  // Debug
-
-                // 1. MUDA O IDIOMA
-                const formattedLocale = newLocale.replace('_', '-');
-                applyTranslations(newLocale);
-
-                // 2. ATUALIZA LABELS E UI
-                updateStaticLabels();
-
-                console.log(`Idioma alterado para: ${formattedLocale}`);
-
-                // 3. CARREGA PARTIDOS
-                loadParties();
-            } else {
-                console.log('Nenhum país selecionado');
-                hideLevel(1);
-            }
-        });
-    }
-
-    const partidoSelect = document.getElementById('partido-select');
-    if (partidoSelect) {
-        partidoSelect.addEventListener('change', function() {
-            if (this.value) {
-                loadCargos();
-            } else {
-                hideLevel(2);
-            }
-        });
-    }
-
-    const cargoSelect = document.getElementById('cargo-select');
-    if (cargoSelect) {
-        cargoSelect.addEventListener('change', function() {
-            if (this.value) {
-                loadCandidatos();
-            } else {
-                hideLevel(3);
-            }
-        });
-    }
-
-    const candidatoSelect = document.getElementById('candidato-select');
-    if (candidatoSelect) {
-        candidatoSelect.addEventListener('change', loadInfo);
-    }
+    console.log('Países solicitados. Aguardando resposta da API...');
 });
 
-// Exportar para uso global (útil para debugging)
-if (typeof window !== 'undefined') {
-    window.applyTranslations = applyTranslations;
-    window.updateStaticLabels = updateStaticLabels;
-    window.hideLevel = hideLevel;
-}
+// Log final para depuração
+console.log('i18n.js carregado e pronto!');
+console.log('Espera que o DOM esteja carregado, depois carrega países.');
