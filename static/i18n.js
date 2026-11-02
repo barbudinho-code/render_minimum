@@ -505,6 +505,64 @@ document.addEventListener('DOMContentLoaded', function() {
         level0.classList.add('level-active');
         level0.classList.remove('level-hidden');
     }
+
+    // Event listeners - anexados APÓS DOMContentLoaded quando elementos existem
+    const paisSelect = document.getElementById('pais-select');
+    if (paisSelect) {
+        paisSelect.addEventListener('change', function() {
+            console.log('País selecionado:', this.value);  // Debug
+            const selectedOption = this.options[this.selectedIndex];
+
+            if (selectedOption && selectedOption.value) {
+                // Pega o locale do atributo data-locale da opção selecionada
+                const newLocale = selectedOption.getAttribute('data-locale') || 'pt_BR';
+
+                console.log('Idioma:', newLocale);  // Debug
+
+                // 1. MUDA O IDIOMA
+                const formattedLocale = newLocale.replace('_', '-');
+                applyTranslations(newLocale);
+
+                // 2. ATUALIZA LABELS E UI
+                updateStaticLabels();
+
+                console.log(`Idioma alterado para: ${formattedLocale}`);
+
+                // 3. CARREGA PARTIDOS
+                loadParties();
+            } else {
+                console.log('Nenhum país selecionado');
+                hideLevel(1);
+            }
+        });
+    }
+
+    const partidoSelect = document.getElementById('partido-select');
+    if (partidoSelect) {
+        partidoSelect.addEventListener('change', function() {
+            if (this.value) {
+                loadCargos();
+            } else {
+                hideLevel(2);
+            }
+        });
+    }
+
+    const cargoSelect = document.getElementById('cargo-select');
+    if (cargoSelect) {
+        cargoSelect.addEventListener('change', function() {
+            if (this.value) {
+                loadCandidatos();
+            } else {
+                hideLevel(3);
+            }
+        });
+    }
+
+    const candidatoSelect = document.getElementById('candidato-select');
+    if (candidatoSelect) {
+        candidatoSelect.addEventListener('change', loadInfo);
+    }
 });
 
 // Exportar para uso global (útil para debugging)
