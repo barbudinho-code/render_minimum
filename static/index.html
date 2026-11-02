@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="lang-pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Candidatos</title>
     <link rel="icon" href="/static/icon.ico"/>
+    <script src="/static/i18n.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -24,20 +25,8 @@
             padding: 40px;
         }
 
-        header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        h1 {
-            color: #333;
-            font-size: 2em;
-            margin-bottom: 10px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
+        header { text-align: center; margin-bottom: 40px; }
+        h1 { color: #333; font-size: 2em; margin-bottom: 10px; }
         .subtitle { color: #666; font-size: 1.1em; }
 
         .hierarchy-container {
@@ -181,23 +170,25 @@
             select { width: 100%; min-width: auto; }
             h1 { font-size: 1.5em; }
         }
+
+        /* Language-specific styles */
+        .lang-en-US h1, .lang-en-US .subtitle { direction: ltr; }
+        .lang-es-ES p, .lang-es-MX p { font-style: italic; }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Sistema de Candidatos</h1>
-            <p class="subtitle">Selecione a hierarquia para ver as informações do candidato</p>
+            <h1 id="page-title" data-i18n="title"></h1>
+            <p class="subtitle" id="page-subtitle" data-i18n="subtitle"></p>
         </header>
 
         <div class="hierarchy-container">
-            <div class="hierarchy-title">
-                📊 Hierarquia de Seleção
-            </div>
+            <div class="hierarchy-title" data-i18n="hierarchyTitle"></div>
 
             <!-- Nível 1: País -->
             <div class="level level-active" id="level-0">
-                <label for="pais-select">🌍 País</label>
+                <label for="pais-select" data-i18n="countryLabel"></label>
                 <select id="pais-select">
                     <option value="">Selecione um país...</option>
                 </select>
@@ -205,7 +196,7 @@
 
             <!-- Nível 2: Partido -->
             <div class="level level-hidden" id="level-1">
-                <label for="partido-select">🎭 Partido</label>
+                <label for="partido-select" data-i18n="partyLabel"></label>
                 <select id="partido-select">
                     <option value="">Selecione um partido...</option>
                 </select>
@@ -213,15 +204,15 @@
 
             <!-- Nível 3: Cargo -->
             <div class="level level-hidden" id="level-2">
-                <label for="cargo-select">💼 Cargo</label>
+                <label for="cargo-select" data-i18n="positionLabel"></label>
                 <select id="cargo-select">
-                    <option value="">Selecione um cargo...</option>
+                    <option value="">Selecione uma posição...</option>
                 </select>
             </div>
 
             <!-- Nível 4: Candidato -->
             <div class="level level-hidden" id="level-3">
-                <label for="candidato-select">👤 Candidato</label>
+                <label for="candidato-select" data-i18n="candidateLabel"></label>
                 <select id="candidato-select">
                     <option value="">Selecione um candidato...</option>
                 </select>
@@ -233,37 +224,36 @@
 
         <!-- Seção de Informações do Candidato -->
         <div class="info-section" id="info-section">
-            <h2 style="color:#333;margin-bottom:15px;">📋 Informações do Candidato</h2>
+            <h2 style="color:#333;margin-bottom:15px;" data-i18n="infoTitle"></h2>
             <div class="info-grid">
                 <div class="info-card">
-                    <h4>Nome Completo</h4>
+                    <h4 data-i18n="nameField"></h4>
                     <span id="info-nome"></span>
                 </div>
                 <div class="info-card">
-                    <h4>Idade</h4>
+                    <h4 data-i18n="ageField"></h4>
                     <span id="info-idade"></span>
                 </div>
                 <div class="info-card">
-                    <h4>Nacionalidade</h4>
+                    <h4 data-i18n="nationalityField"></h4>
                     <span id="info-nacionalidade"></span>
                 </div>
             </div>
             <div class="info-card" style="margin-top: 20px;">
-                <h4>Biografia</h4>
+                <h4 data-i18n="bioField"></h4>
                 <p id="info-biografia" style="white-space: pre-wrap; line-height: 1.8;"></p>
             </div>
 
-            <p style="margin-top: 20px; color: #666;">
-                <small>Data da seleção: <span id="info-data"></small></p>
+            <p style="margin-top: 20px; color: #666;" data-i18n="dateField"></p>
         </div>
 
         <!-- Estado vazio inicial -->
         <div class="empty-state" id="empty-state">
-            Selecione um país no primeiro dropdown para começar.
-            A interface atualiza automaticamente conforme você navega pela hierarquia.
+            <p data-i18n="emptyState.title"></p>
+            <p style="margin-top: 10px;" data-i18n="emptyState.subtitle"></p>
         </div>
 
-        <div class="version-badge">Versão: 1.0.1</div>
+        <div class="version-badge">Versão: 1.0.3</div>
     </div>
 
     <script>
@@ -279,30 +269,32 @@
         const emptyState = document.getElementById('empty-state');
         const breadcrumb = document.getElementById('breadcrumb');
 
-        // Dados armazenados (para evitar chamadas desnecessárias)
-        let dadosCache = {
-            paises: null,
-            partidos: new Map(),
-            cargos: new Map(),
-            candidatos: new Map(),
-            info: null
+        // Dicionário de localização de países -> locale
+        const LOCALE_MAP = {
+            1: 'pt_BR',      // Brasil
+            2: 'en_US',      // Portugal (usando en_US)
+            3: 'es_ES',      // Espanha
+            4: 'es_MX',      // Argentina
+            5: 'es_MX'       // México
         };
 
         // Carrega países ao iniciar
-        async function carregarPaises() {
+        async function loadCountries() {
             try {
                 const res = await fetch('/api/carrega_paises');
-                dadosCache.paises = await res.json();
+                const paises = await res.json();
 
                 selectores.pais.innerHTML = '<option value="">Selecione um país...</option>' +
-                    dadosCache.paises.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+                    paises.map(p => `<option value="${p.id}" data-locale="${LOCALE_MAP[p.id]}">
+                        ${p.nome}
+                    </option>`).join('');
             } catch (err) {
                 console.error('Erro ao carregar países:', err);
             }
         }
 
         // Carrega partidos para um país
-        async function carregarPartidos() {
+        async function loadParties() {
             const paisId = selectores.pais.value;
             if (!paisId) return;
 
@@ -310,19 +302,18 @@
                 const res = await fetch(`/api/carrega_partidos/${paisId}`);
                 const partidos = await res.json();
 
-                // Limpa e repopula o dropdown de partidos
                 selectores.partido.innerHTML = '<option value="">Selecione um partido...</option>' +
                     partidos.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
 
                 // Armazena no cache
-                dadosCache.partidos.set(paisId, partidos);
+                window.partidosCache.set(paisId, partidos);
             } catch (err) {
                 console.error('Erro ao carregar partidos:', err);
             }
         }
 
         // Carrega cargos para um partido
-        async function carregarCargos() {
+        async function loadCargos() {
             const paisId = selectores.pais.value;
             const partidoId = selectores.partido.value;
 
@@ -332,17 +323,17 @@
                 const res = await fetch(`/api/carrega_cargos/${paisId}/${partidoId}`);
                 const cargos = await res.json();
 
-                selectores.cargo.innerHTML = '<option value="">Selecione um cargo...</option>' +
+                selectores.cargo.innerHTML = '<option value="">Selecione uma posição...</option>' +
                     cargos.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
 
-                dadosCache.cargos.set(`${paisId}-${partidoId}`, cargos);
+                window.cargosCache.set(`${paisId}-${partidoId}`, cargos);
             } catch (err) {
                 console.error('Erro ao carregar cargos:', err);
             }
         }
 
         // Carrega candidatos para um cargo
-        async function carregarCandidatos() {
+        async function loadCandidatos() {
             const paisId = selectores.pais.value;
             const partidoId = selectores.partido.value;
             const cargoId = selectores.cargo.value;
@@ -356,14 +347,14 @@
                 selectores.candidato.innerHTML = '<option value="">Selecione um candidato...</option>' +
                     candidatos.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
 
-                dadosCache.candidatos.set(`${paisId}-${partidoId}-${cargoId}`, candidatos);
+                window.candidatosCache.set(`${paisId}-${partidoId}-${cargoId}`, candidatos);
             } catch (err) {
                 console.error('Erro ao carregar candidatos:', err);
             }
         }
 
         // Carrega informações do candidato
-        async function carregarInfo() {
+        async function loadInfo() {
             const paisId = selectores.pais.value;
             const partidoId = selectores.partido.value;
             const cargoId = selectores.cargo.value;
@@ -380,41 +371,39 @@
                 document.getElementById('info-idade').textContent = info.idade;
                 document.getElementById('info-nacionalidade').textContent = info.nacionalidade;
                 document.getElementById('info-biografia').textContent = info.biografia;
-                document.getElementById('info-data').textContent = new Date().toLocaleDateString();
+
+                // Atualiza breadcrumb com os dados carregados
+                updateBreadcrumb(info);
 
                 // Mostra a seção de informações e esconde o estado vazio
                 infoSection.style.display = 'block';
                 emptyState.style.display = 'none';
 
-                dadosCache.info = info;
+                window.infoCache.set(`${paisId}-${partidoId}-${cargoId}-${candidatoId}`, info);
             } catch (err) {
                 console.error('Erro ao carregar info:', err);
             }
         }
 
         // Atualiza breadcrumb
-        function atualizarBreadcrumb() {
-            const nivelPais = selectores.pais.value ? 1 : 0;
-            const nivelPartido = selectores.partido.value ? 2 : 0;
-            const nivelCargo = selectores.cargo.value ? 3 : 0;
-            const nivelCandidato = selectores.candidato.value ? 4 : 0;
-
+        function updateBreadcrumb(info) {
             let html = '';
 
-            if (selectores.pais.value) {
-                html += `<span class="breadcrumb-item">🌍 ${selectores.pais.options[selectores.pais.selectedIndex]?.text}</span>`;
+            if (info.pais) {
+                html += `<span class="breadcrumb-item">🌍 ${info.pais}</span>`;
             }
-            if (selectores.partido.value) {
-                html += `<span class="breadcrumb-item" style="margin: 0 5px;">→</span>
-                        <span class="breadcrumb-item">🎭 ${selectores.partido.options[selectores.partido.selectedIndex]?.text}</span>`;
+            if (info.partido) {
+                html += `<span style="margin: 0 5px;">→</span>
+                        <span class="breadcrumb-item" style="color:#764ba2;font-weight:600">🎭 ${info.partido}</span>`;
             }
-            if (selectores.cargo.value) {
-                html += `<span class="breadcrumb-item" style="margin: 0 5px;">→</span>
-                        <span class="breadcrumb-item">💼 ${selectores.cargo.options[selectores.cargo.selectedIndex]?.text}</span>`;
+            if (info.cargo) {
+                html += `<span style="margin: 0 5px;">→</span>
+                        <span class="breadcrumb-item" style="color:#f093fb">💼 ${info.cargo}</span>`;
             }
-            if (selectores.candidato.value) {
-                html += `<span class="breadcrumb-item" style="margin: 0 5px;">→</span>
-                        <span class="breadcrumb-item" style="color:#667eea;font-weight:bold">👤 ${selectores.candidato.options[selectores.candidato.selectedIndex]?.text}</span>`;
+            if (info.nome) {
+                const nomeShort = info.nome.split(' ').slice(0, 2).join(' ');
+                html += `<span style="margin: 0 5px;">→</span>
+                        <span class="breadcrumb-item" style="color:#ff6b95;font-weight:bold;font-size:0.9em">👤 ${nomeShort}</span>`;
             }
 
             breadcrumb.innerHTML = html;
@@ -422,20 +411,14 @@
 
         // Event listeners para recarregar dados quando mudar de nível hierárquico
         selectores.pais.addEventListener('change', function() {
-            carregarPartidos();
+            loadParties();
             atualizarBreadcrumb();
-            // Limpa seleções inferiores quando país muda
-            selectores.partido.value = '';
-            selectores.cargo.value = '';
-            selectores.candidato.value = '';
 
             if (!selectores.pais.value) {
-                // Reseta tudo - adiciona classe hidden
                 document.getElementById('level-1').classList.add('level-hidden');
                 document.getElementById('level-2').classList.add('level-hidden');
                 document.getElementById('level-3').classList.add('level-hidden');
             } else {
-                // Remove hidden para mostrar level-1 (partido)
                 const levelPartido = document.getElementById('level-1');
                 if (!levelPartido.classList.contains('level-active')) {
                     levelPartido.classList.remove('level-hidden');
@@ -445,7 +428,7 @@
         });
 
         selectores.partido.addEventListener('change', function() {
-            carregarCargos();
+            loadCargos();
             atualizarBreadcrumb();
             if (!selectores.partido.value) {
                 document.getElementById('level-2').classList.add('level-hidden');
@@ -459,7 +442,7 @@
         });
 
         selectores.cargo.addEventListener('change', function() {
-            carregarCandidatos();
+            loadCandidatos();
             atualizarBreadcrumb();
             if (!selectores.cargo.value) {
                 document.getElementById('level-3').classList.add('level-hidden');
@@ -472,15 +455,38 @@
             }
         });
 
-        selectores.candidato.addEventListener('change', carregarInfo);
+        selectores.candidato.addEventListener('change', loadInfo);
 
-        // Inicializa - garante que o primeiro nível está sempre visível
-        const levelPais = document.getElementById('level-0');
-        if (levelPais) {
-            levelPais.classList.add('level-active');
+        // Atualiza breadcrumb ao carregar países
+        function atualizarBreadcrumb() {
+            const pais = selectores.pais.options[selectores.pais.selectedIndex]?.text;
+            const partido = selectores.partido.options[selectores.partido.selectedIndex]?.text;
+            const cargo = selectores.cargo.options[selectores.cargo.selectedIndex]?.text;
+            const candidato = selectores.candidato.options[selectores.candidato.selectedIndex]?.text;
+
+            let html = '';
+
+            if (pais) {
+                html += `<span class="breadcrumb-item">🌍 ${pais}</span>`;
+            }
+            if (partido) {
+                html += `<span style="margin: 0 5px;">→</span>
+                        <span class="breadcrumb-item" style="color:#764ba2;font-weight:600">🎭 ${partido}</span>`;
+            }
+            if (cargo) {
+                html += `<span style="margin: 0 5px;">→</span>
+                        <span class="breadcrumb-item" style="color:#f093fb">💼 ${cargo}</span>`;
+            }
+            if (candidato) {
+                html += `<span style="margin: 0 5px;">→</span>
+                        <span class="breadcrumb-item" style="color:#ff6b95;font-weight:bold;font-size:0.9em">👤 ${candidato}</span>`;
+            }
+
+            breadcrumb.innerHTML = html;
         }
 
-        carregarPaises();
+        // Inicializa
+        loadCountries();
     </script>
 </body>
 </html>

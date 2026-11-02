@@ -1,0 +1,62 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=utf-8"
+
+msgid "Sistema de Candidatos"
+msgstr "Candidate System"
+
+msgid "Selecione a hierarquia para ver as informações do candidato"
+msgstr "Select the hierarchy to see candidate information"
+
+msgid "📊 Hierarquia de Seleção"
+msgstr "📊 Selection Hierarchy"
+
+msgid "🌍 País"
+msgstr "🌍 Country"
+
+msgid "🎭 Partido"
+msgstr "🎭 Party"
+
+msgid "💼 Cargo"
+msgstr "💼 Position"
+
+msgid "👤 Candidato"
+msgstr "👤 Candidate"
+
+msgid "Selecione um país..."
+msgstr "Select a country..."
+
+msgid "Selecione um partido..."
+msgstr "Select a party..."
+
+msgid "Selecione um cargo..."
+msgstr "Select a position..."
+
+msgid "Selecione um candidato..."
+msgstr "Select a candidate..."
+
+msgid "📋 Informações do Candidato"
+msgstr "📋 Candidate Information"
+
+msgid "Nome Completo"
+msgstr "Full Name"
+
+msgid "Idade"
+msgstr "Age"
+
+msgid "Nacionalidade"
+msgstr "Nationality"
+
+msgid "Biografia"
+msgstr "Biography"
+
+msgid "Data da seleção:"
+msgstr "Selection date:"
+
+msgid "Versão: 1.0.2"
+msgstr "Version: 1.0.2"
+
+msgid "Selecione um país no primeiro dropdown para começar."
+msgstr "Select a country from the first dropdown to begin."
+
+msgid "A interface atualiza automaticamente conforme você navega pela hierarquia."
+msgstr "The interface updates automatically as you navigate through the hierarchy."

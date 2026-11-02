@@ -69,8 +69,27 @@ python app.py
 - ✅ **Hierarquia interativa**: País → Partido → Cargo → Candidato
 - ✅ **Breadcrumb** para navegação visual
 - ✅ **Cache de dados** evita chamadas HTTP desnecessárias
+- ✅ **Internacionalização (i18n)**: suporte a múltiplos idiomas por país
 - ✅ **Responsivo** - funciona em desktop e mobile
 - ✅ **API Documentation** integrada na interface
+
+### 🌍 Internacionalização
+
+A aplicação suporta múltiplos idiomas automaticamente baseados no país selecionado:
+
+| País | Idioma | Locale | Timezone |
+|------|--------|--------|----------|
+| Brasil | Português (BR) | pt_BR | America/Sao_Paulo |
+| Portugal | Inglês (US) | en_US | Europe/Lisbon |
+| Espanha | Espanhol | es_ES | Europe/Madrid |
+| Argentina | Espanhol (Méx) | es_MX | America/Argentina/Buenos_Aires |
+| México | Espanhol (Méx) | es_MX | America/Mexico_City |
+
+**Como funciona:**
+1. Ao selecionar um país, o idioma muda automaticamente
+2. Todas as interfaces são traduzidas para o idioma local
+3. A API retorna cabeçalhos com informação do idioma atual
+4. Timezone é configurada automaticamente por país
 
 ## Tecnologias Utilizadas
 
