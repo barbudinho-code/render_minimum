@@ -7,7 +7,11 @@ app = Flask(__name__)
 @app.route('/')
 def index():
     """Servindo o frontend React"""
-    return send_from_directory('static', 'index.html')
+    # Invalida cache do JavaScript para garantir versão atualizada
+    response = send_from_directory('static', 'index.html')
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    return response
 
 @app.route('/api/i18n')
 def get_translations():

@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Candidatos</title>
     <link rel="icon" href="/static/icon.ico"/>
+
+    <!-- Sistema de Internacionalização (i18n) -->
     <script src="/static/i18n.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    <style>        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -269,14 +271,41 @@
         const emptyState = document.getElementById('empty-state');
         const breadcrumb = document.getElementById('breadcrumb');
 
-        // Dicionário de localização de países -> locale
+        // Dicionário de localização de países -> locale (formato para API: pt-BR, en-US, es-ES)
         const LOCALE_MAP = {
-            1: 'pt_BR',      // Brasil
-            2: 'en_US',      // Portugal (usando en_US)
-            3: 'es_ES',      // Espanha
-            4: 'es_MX',      // Argentina
-            5: 'es_MX'       // México
+            1: 'pt-BR',     // Brasil
+            2: 'en-US',     // Portugal
+            3: 'es-ES',     // Espanha
+            4: 'es-MX',     // Argentina
+            5: 'es-MX'      // México
         };
+
+        // Função para aplicar tradução de idioma
+        function atualizarIdioma(locale) {
+            console.log('Mudando idioma para:', locale);
+
+            // Muda o lang do HTML
+            document.documentElement.lang = locale.split('-')[0];
+            console.log('HTML lang mudado para:', document.documentElement.lang);
+
+            // Atualiza textos baseado no locale
+            const trad = {
+                'pt-BR': { title: 'Sistema de Candidatos', hierarchyTitle: '📊 Hierarquia de Seleção' },
+                'en-US': { title: 'Candidate System', hierarchyTitle: '📊 Selection Hierarchy' },
+                'es-ES': { title: 'Sistema de Candidatos', hierarchyTitle: '📊 Jerarquía de Selección' }
+            };
+
+            const t = trad[locale] || trad['pt-BR'];
+
+            // Atualiza títulos
+            if (document.getElementById('page-title')) {
+                document.getElementById('page-title').textContent = t.title;
+            }
+
+            if (document.querySelector('[data-i18n="hierarchyTitle"]')) {
+                document.querySelector('[data-i18n="hierarchyTitle"]').textContent = t.hierarchyTitle;
+            }
+        }
 
         // Carrega países ao iniciar
         async function loadCountries() {
@@ -411,20 +440,25 @@
 
         // Event listeners para recarregar dados quando mudar de nível hierárquico
         selectores.pais.addEventListener('change', function() {
-            loadParties();
-            atualizarBreadcrumb();
+            console.log('País selecionado:', this.value);
 
-            if (!selectores.pais.value) {
+            if (this.value) {
+                const selectedOption = this.options[this.selectedIndex];
+                const locale = selectedOption.getAttribute('data-locale');
+
+                // Muda o idioma antes de carregar partidos
+                atualizarIdioma(locale);
+
+                // Carrega partidos
+                loadParties();
+            } else {
+                console.log('Nenhum país selecionado, resetando');
                 document.getElementById('level-1').classList.add('level-hidden');
                 document.getElementById('level-2').classList.add('level-hidden');
                 document.getElementById('level-3').classList.add('level-hidden');
-            } else {
-                const levelPartido = document.getElementById('level-1');
-                if (!levelPartido.classList.contains('level-active')) {
-                    levelPartido.classList.remove('level-hidden');
-                    levelPartido.classList.add('level-active');
-                }
             }
+
+            atualizarBreadcrumb();
         });
 
         selectores.partido.addEventListener('change', function() {
